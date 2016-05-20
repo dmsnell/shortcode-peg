@@ -1,0 +1,27 @@
+{
+  "name": "shortcode-peg",
+  "version": "1.0.0",
+  "description": "PEG grammar for parsing WordPress shortcodes",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dmsnell/shortcode-peg.git"
+  },
+  "keywords": [
+    "PEG",
+    "WordPress",
+    "shortcode"
+  ],
+  "author": "Dennis Snell <dennis.snell@automattic.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dmsnell/shortcode-peg/issues"
+  },
+  "homepage": "https://github.com/dmsnell/shortcode-peg#readme",
+  "devDependencies": {
+    "pegjs": "0.9.0"
+  }
+}
