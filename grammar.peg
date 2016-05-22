@@ -1,0 +1,141 @@
+Post
+ = s:( ( QuotedShortcode
+       / Shortcode
+       / Embed
+       / Printable
+     )+ )
+  {
+    return s.reduce( ( o, next ) => {
+      const prev = o.slice( -1 ).shift()
+
+      if (
+        'string' === typeof prev &&
+        'string' === typeof next
+      ) {
+        return o.slice( 0, -1 ).concat( prev + next )
+      }
+
+      return o.concat( next )
+    }, [] )
+  }
+
+QuotedShortcode
+ = "[" s:Shortcode "]"
+ {
+   return text()
+ }
+
+Shortcode
+ = EnclosingShortcode
+ / SelfClosingShortcode
+
+EnclosingShortcode
+ = o:Tag
+   i:(it:(!ClosingTag l:. {return l})+ { return it.join('') })?
+   c:ClosingTag
+   & { return c.tag === o.tag }
+   {
+     return Object.assign(
+       {
+         tag: o.tag,
+         isClosing: true
+       },
+       o.attributes && { attributes: o.attributes },
+       i && { content: i }
+     )
+   }
+
+SelfClosingShortcode
+ = t:Tag
+  {
+    return Object.assign( t,
+      { isSelfClosing: true }
+    )
+  }
+
+ClosingTag
+ = "[/" i:Identifier "]"
+  {
+    return { tag: i, isClosing: true }
+  }
+
+Tag
+ = "[" i:Identifier _ a:AttributeList? _ sc:"/"? "]"
+  {
+    return Object.assign( {},
+      { tag: i },
+      a && { attributes: a },
+      sc && { isSelfClosing: true }
+    )
+  }
+
+AttributeList
+ = as:(a:Attribute _ { return a } )+
+  {
+    return as.reduce( ( o, n ) => {
+      const flags = o.flags || []
+
+      return 'string' === typeof n
+        ? Object.assign( o, { flags: flags.concat( n ) } )
+        : Object.assign( o, n )
+    }, {} )
+  }
+
+Attribute
+ = key:Identifier _ "=" _ value:QuotedString
+  { return { [ key ]: value } }
+ / Identifier
+
+Embed
+ = URL
+
+URL
+ = protocol:("http" "s"?)
+   "://"
+   host:( !":" !"/" h:(Letter / Digit / [\._-])* { return h })
+   port:(":" d:Digit+ { return d })?
+   "/"?
+   path:( p:(!"?" n:. { return n })* { return p })?
+   query:( "?" q:(Letter / Digit / [&%=])+ { return q })?
+   {
+     return Object.assign(
+       {
+         type: 'URL',
+         protocol: protocol.join( '' ),
+         host: host.join( '' )
+       },
+       port && { port: port.join('') },
+       path && { path: path.join('') },
+       query && { query: query.join('') }
+     )
+   }
+
+Identifier
+ = (i:Letter is:(Letter / Digit / "_")*) { return i + is.join( '' ) }
+
+QuotedString
+ = '"' s:(!'"' p:Printable { return p })* '"' { return s.join( '' ) }
+ / "'" s:(!"'" p:Printable { return p })* "'" { return s.join( '' ) }
+
+Printable
+ = Letter
+ / Punctuation
+ / Digit
+ / Quote
+ / Special
+ / Whitespace
+
+Letter
+ = UpperCaseLetter
+ / LowerCaseLetter
+
+UpperCaseLetter = [A-Z]
+LowerCaseLetter = [a-z]
+Digit = [0-9]
+Quote = ['"]
+Punctuation = [,\.!?:;]
+Special = [=\[\]\\/_-]
+Whitespace = [ \r\n\t]
+
+_ "whitespace"
+ = [ \t]*
