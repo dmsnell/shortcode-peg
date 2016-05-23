@@ -28,10 +28,12 @@ QuotedShortcode
 Shortcode
  = EnclosingShortcode
  / SelfClosingShortcode
+ / Tag
+ / ClosingTag
 
 EnclosingShortcode
  = o:Tag
-   i:(it:(!ClosingTag l:. {return l})+ { return it.join('') })?
+   i:(it:(!ClosingTag !(iot:Tag &{ iot.tag === o.tag } { return iot }) l:Printable {return l})+ { return it.join('') })?
    c:ClosingTag
    & { return c.tag === o.tag }
    {
@@ -63,7 +65,7 @@ Tag
  = "[" i:Identifier _ a:AttributeList? _ sc:"/"? "]"
   {
     return Object.assign( {},
-      { tag: i },
+      { tag: i, isOpening: true },
       a && { attributes: a },
       sc && { isSelfClosing: true }
     )
